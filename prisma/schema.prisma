@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int     @id @default(autoincrement())
+  email     String  @unique
+  name      String
+  googleId  String  @unique
+  createdAt DateTime @default(now())
+
+  income       Income[]
+  transactions Transaction[]
+  netWorth    NetWorth[]
+  categories   Category[]
+}
+
+model Income {
+  id        Int     @id @default(autoincrement())
+  userId    Int 
+  source    String
+  amount    Decimal
+  date      DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Company {
+  id        Int     @id @default(autoincrement())
+  name      String  @unique
+  createdAt DateTime @default(now())
+
+  transactions Transaction[]
+}
+
+model Category {
+   id        Int     @id @default(autoincrement())
+  userId    Int 
+  name      String 
+  createdAt DateTime @default(now())
+  
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  @@unique([userId, name])
+}
+
+
+model Transaction {
+  id          Int     @id @default(autoincrement())
+  userId      Int 
+  companyId   Int 
+  categoryId  Int   
+  item        String
+  paymentType String
+  amount      Decimal
+  date        DateTime
+  createdAt   DateTime @default(now())
+  
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company  Company  @relation(fields: [companyId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+}
+
+
+model NetWorth {
+  id          Int     @id @default(autoincrement())
+  userId      Int 
+  accountName String 
+  amount      Decimal
+  date        DateTime
+  createdAt   DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
