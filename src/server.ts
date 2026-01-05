@@ -5,6 +5,7 @@ import cors from '@fastify/cors';
 import { authRoutes } from './routes/auth';
 import { incomeRoutes } from './routes/income';
 import { authenticate } from './middleware/auth'
+import './types/index';
 
 
 const fastify = Fastify({
