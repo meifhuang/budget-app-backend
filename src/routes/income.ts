@@ -1,6 +1,12 @@
 import { FastifyInstance } from 'fastify';
 import { prisma } from '../lib/prisma';
-import { createIncomeSchema } from '../schemas/income';
+import { z } from 'zod';
+
+export const createIncomeSchema = z.object({
+  amount: z.number('Must be a number').positive('Amount must be positive'),
+  source: z.string().min(1, 'Source is required'),
+  date: z.string().datetime('Invalid date format'),
+});
 
 export async function incomeRoutes(app: FastifyInstance) {
   // Create income

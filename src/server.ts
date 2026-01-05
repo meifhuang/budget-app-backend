@@ -4,7 +4,8 @@ import fastifyJWT from '@fastify/jwt';
 import cors from '@fastify/cors';
 import { authRoutes } from './routes/auth';
 import { incomeRoutes } from './routes/income';
-import { authenticate } from './middleware/auth'
+import { authenticate } from './middleware/auth';
+import { transactionRoutes } from './routes/transactions';
 import './types/index';
 
 
@@ -30,6 +31,7 @@ fastify.decorate('authenticate', authenticate)
 
 fastify.register(authRoutes)
 fastify.register(incomeRoutes)
+fastify.register(transactionRoutes)
 
 
 /**
