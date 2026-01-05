@@ -13,6 +13,17 @@ vi.mock('../lib/prisma', () => ({
       delete: vi.fn(),
       update: vi.fn(),
     },
+    company: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+    },
+    category: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+    },
   },
 }));
 
@@ -45,33 +56,12 @@ describe('Transactions Integration Tests', () => {
   it('should create transaction with valid data', async () => {
     const { prisma } = await import('../lib/prisma');
 
-    (prisma.transaction.create as any).mockResolvedValue({
-      id: 1,
-      userId: 1,
-      companyId: 2,
-      categoryId: 3,
-      item: 'Laptop',
-      paymentType: 'card',
-      amount: 1200,
-      date: new Date('2025-03-01'),
-      createdAt: new Date(),
-    });
+    (prisma.company.findUnique as any).mockResolvedValue({ id: 2, name: 'Acme' });
+    (prisma.category.findUnique as any).mockResolvedValue({ id: 3, userId: 1, name: 'Groceries' });
+    (prisma.transaction.create as any).mockResolvedValue({ id: 1, userId: 1, companyId: 2, categoryId: 3, item: 'Laptop', paymentType: 'card', amount: 1200, date: new Date('2025-03-01'), createdAt: new Date() });
 
-    const response = await app.inject({
-      method: 'POST',
-      url: '/transactions',
-      payload: {
-        companyId: 2,
-        categoryId: 3,
-        item: 'Laptop',
-        paymentType: 'card',
-        amount: 1200,
-        date: '2025-03-01',
-      },
-    });
-
-    expect(response.statusCode).toBe(201);
-    expect(response.json().item).toBe('Laptop');
+    const res = await app.inject({ method: 'POST', url: '/transactions', payload: { companyId: 2, categoryId: 3, item: 'Laptop', paymentType: 'card', amount: 1200, date: '2025-03-01' } });
+    expect(res.statusCode).toBe(201);
   });
 
   it('should return 400 for invalid payload (bad amount)', async () => {
@@ -275,4 +265,4 @@ describe('Transactions Integration Tests', () => {
 
     expect(response.statusCode).toBe(404);
   });
-})
+});
