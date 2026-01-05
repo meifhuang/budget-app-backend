@@ -6,6 +6,8 @@ import { authRoutes } from './routes/auth';
 import { incomeRoutes } from './routes/income';
 import { authenticate } from './middleware/auth';
 import { transactionRoutes } from './routes/transactions';
+import { companyRoutes } from './routes/companies';
+import { categoryRoutes } from './routes/categories';
 import './types/index';
 
 
@@ -32,6 +34,8 @@ fastify.decorate('authenticate', authenticate)
 fastify.register(authRoutes)
 fastify.register(incomeRoutes)
 fastify.register(transactionRoutes)
+fastify.register(companyRoutes)
+fastify.register(categoryRoutes)
 
 
 /**

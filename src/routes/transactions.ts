@@ -9,7 +9,7 @@ const createTransactionSchema = z.object({
   paymentType: z.string().min(1),
   amount: z.number(),
   date: z.string().refine((d) => !Number.isNaN(Date.parse(d)), { message: 'Invalid date' }),
-});
+})
 
 export async function transactionRoutes(app: FastifyInstance) {
   // Create transaction
@@ -21,6 +21,12 @@ export async function transactionRoutes(app: FastifyInstance) {
         const userId = (request.user as any).userId;
         const { companyId, categoryId, item, paymentType, amount, date } =
           createTransactionSchema.parse(request.body);
+        const company = await prisma.company.findUnique({ where: { id: companyId } });
+        if (!company) return reply.status(400).send({ error: 'Company not found' });
+
+        const category = await prisma.category.findUnique({ where: { id: categoryId } });
+        if (!category) return reply.status(400).send({ error: 'Category not found' });
+        if (category.userId !== userId) return reply.status(403).send({ error: 'Not authorized to use this category' });
 
         const transaction = await prisma.transaction.create({
           data: {
