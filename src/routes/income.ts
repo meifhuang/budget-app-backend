@@ -26,6 +26,7 @@ export async function incomeRoutes(app: FastifyInstance) {
     }
   );
 
+//Get income
   app.get<{ Querystring: {year: string } }> (
     '/income',
     { onRequest: [app.authenticate]},
@@ -61,6 +62,7 @@ export async function incomeRoutes(app: FastifyInstance) {
     }
   );
 
+  //Delete income
   app.delete(
     '/income/:id',
     { onRequest: [app.authenticate] },
@@ -83,6 +85,8 @@ export async function incomeRoutes(app: FastifyInstance) {
       }
     }
   );
+
+
 
 
 }
