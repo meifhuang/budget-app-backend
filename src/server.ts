@@ -10,6 +10,7 @@ import { transactionRoutes } from './routes/transactions';
 import { companyRoutes } from './routes/companies';
 import { categoryRoutes } from './routes/categories';
 import './types/index';
+import { networthRoutes } from './routes/networth';
 
 const fastify = Fastify({
   logger: true,
@@ -41,6 +42,7 @@ fastify.register(incomeRoutes)
 fastify.register(transactionRoutes)
 fastify.register(companyRoutes)
 fastify.register(categoryRoutes)
+fastify.register(networthRoutes)
 
 
 /**
