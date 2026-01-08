@@ -5,7 +5,7 @@ import { z } from 'zod';
 export const createIncomeSchema = z.object({
   amount: z.number('Must be a number').positive('Amount must be positive'),
   source: z.string().min(1, 'Source is required'),
-  date: z.string().datetime('Invalid date format'),
+  date: z.string('Invalid date format'),
 });
 
 export async function incomeRoutes(app: FastifyInstance) {
@@ -27,46 +27,71 @@ export async function incomeRoutes(app: FastifyInstance) {
         });
         reply.status(201).send(income);
       } catch (error) {
+        console.log(error)
         reply.status(400).send({ error: `Failed to create income: ${error.message}` });
       }
     }
   );
 
+  app.get(
+  '/income/years',
+  { onRequest: [app.authenticate] },
+  async (request, reply) => {
+    const userId = (request.user as any).userId;
+
+    try {
+      const incomes = await prisma.income.findMany({
+        where: { userId },
+        select: { date: true },
+        orderBy: { date: 'desc' },
+      });
+
+      const years = Array.from(
+        new Set(incomes.map(inc => new Date(inc.date).getFullYear()))
+      ).sort((a, b) => b - a);
+
+      return reply.send({ years });
+    } catch (error: any) {
+      return reply.status(500).send({ error: `Failed: ${error.message}` });
+    }
+  }
+);
+
 //Get income
-  app.get<{ Querystring: {year: string } }> (
+  app.get<{ Querystring: {year?: string } }> (
     '/income',
     { onRequest: [app.authenticate]},
     async (request, reply) => {
         const userId = (request.user as any).userId;
         const { year } = request.query;
      try {
-        const where: any = { userId };
+      // Get all incomes for user
+      const allIncomes = await prisma.income.findMany({
+        where: { userId },
+        orderBy: { date: 'desc' },
+      });
 
-         if (!year) {
-            return reply.status(400).send({ error: 'Year parameter required' });
-        }
-
-        if (year !== undefined) {
-          const y = parseInt(year, 10);
-          if (!Number.isFinite(y) || y < 0) {
-            return reply.status(400).send({ error: 'Invalid year parameter' });
-          }
-          const start = new Date(Date.UTC(y, 0, 1));
-          const end = new Date(Date.UTC(y + 1, 0, 1));
-          where.date = { gte: start, lt: end };
-        }
-
-        const incomes = await prisma.income.findMany({
-          where,
-          orderBy: { date: 'desc' },
-        });
-
-        return reply.status(200).send(incomes);
-      } catch (error: any) {
-        return reply.status(500).send({ error: `Failed to fetch incomes: ${error.message}` });
+      // Filter by year if provided
+      let filteredIncomes = allIncomes;
+      if (year) {
+        const y = parseInt(year, 10);
+        const start = new Date(Date.UTC(y, 0, 1));
+        const end = new Date(Date.UTC(y + 1, 0, 1));
+        filteredIncomes = allIncomes.filter(
+          inc => new Date(inc.date) >= start && new Date(inc.date) < end
+        );
       }
+
+      return reply.send({
+        yearIncomes: filteredIncomes,
+        yearTotal: filteredIncomes.reduce((sum, inc) => sum + parseFloat(inc.amount.toString()), 0),
+        allTimeTotal: allIncomes.reduce((sum, inc) => sum + parseFloat(inc.amount.toString()), 0),
+      });
+    } catch (error: any) {
+      return reply.status(500).send({ error: `Failed: ${error.message}` });
     }
-  );
+  }
+);
 
   //Delete income
   app.delete(
